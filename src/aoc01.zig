@@ -14,28 +14,20 @@ pub fn main() !void {
     defer allocator.free(data);
     const input = utils.cleanInput(data);
 
+    // Part 1
     const sum = captchaSum(input);
     print("Part 1: {d}\n", .{sum});
 }
 
+// Part 1
 fn captchaSum(input: []const u8) u32 {
     var sum: u32 = 0;
-    const last = input.len - 1;
+    const last = input.len;
     // Check consecutive pairs
-    for (0..input.len) |i| {
-        // Last and First
-        if (i == last) {
-            if (input[0] == input[last]) {
-                sum += input[last] - '0';
-            }
-            break;
-        }
-        const a = input[i];
-        const b = input[i + 1];
-        _ = a + b;
-        // Normal case
-        if (input[i] == input[i + 1]) {
-            sum += input[i] - '0';
+    for (input, 0..) |c, i| {
+        const next_index = (i + 1) % last;
+        if (c == input[next_index]) {
+            sum += c - '0';
         }
     }
     return sum;
