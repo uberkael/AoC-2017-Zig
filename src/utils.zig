@@ -55,7 +55,7 @@ pub fn getLinesSlice(
 /// Removes trailing newlines from the input
 pub fn cleanInput(input: []const u8) []const u8 {
     if (input.len > 0 and input[input.len - 1] == '\n') {
-        return input[0..input.len - 1];
+        return input[0 .. input.len - 1];
     }
     return input;
 }
@@ -80,4 +80,89 @@ pub fn parseSliceNums(
     return list.toOwnedSlice() catch |err| {
         std.debug.panic("Error converting to owned slice: {}", .{err});
     };
+}
+
+///////////
+// Tests //
+///////////
+test "readFile" {
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+
+    const file_path = "input/01/input";
+    const read_content = readFile(allocator, file_path);
+    defer allocator.free(read_content);
+
+    try std.testing.expect(read_content.len > 0);
+}
+
+test "linesIterator" {
+    const data = "line1\nline2\nline3";
+    var iter = linesIterator(data);
+
+    try std.testing.expectEqualStrings("line1", iter.next().?);
+    try std.testing.expectEqualStrings("line2", iter.next().?);
+    try std.testing.expectEqualStrings("line3", iter.next().?);
+    try std.testing.expect(iter.next() == null);
+}
+
+test "getLinesList" {
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+
+    const data = "line1\nline2\nline3";
+    var lines = getLinesList(allocator, data);
+    defer lines.deinit();
+
+    try std.testing.expectEqual(3, lines.items.len);
+    try std.testing.expectEqualStrings("line1", lines.items[0]);
+    try std.testing.expectEqualStrings("line2", lines.items[1]);
+    try std.testing.expectEqualStrings("line3", lines.items[2]);
+}
+
+test "getLinesSlice" {
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+
+    const data = "line1\nline2\nline3";
+    const lines = getLinesSlice(allocator, data);
+    defer allocator.free(lines);
+
+    try std.testing.expectEqual(3, lines.len);
+    try std.testing.expectEqualStrings("line1", lines[0]);
+    try std.testing.expectEqualStrings("line2", lines[1]);
+    try std.testing.expectEqualStrings("line3", lines[2]);
+}
+
+test "cleanInput" {
+    const input = "hello world\n";
+    const cleaned = cleanInput(input);
+    try std.testing.expectEqualStrings("hello world", cleaned);
+
+    const input2 = "no newline";
+    const cleaned2 = cleanInput(input2);
+    try std.testing.expectEqualStrings("no newline", cleaned2);
+
+    const input3 = "\n";
+    const cleaned3 = cleanInput(input3);
+    try std.testing.expectEqualStrings("", cleaned3);
+}
+
+test "parseSliceNums" {
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+
+    const line = "1,2,3,4";
+    const nums = parseSliceNums(allocator, line, ',');
+    defer allocator.free(nums);
+
+    try std.testing.expectEqual(4, nums.len);
+    try std.testing.expectEqual(1, nums[0]);
+    try std.testing.expectEqual(2, nums[1]);
+    try std.testing.expectEqual(3, nums[2]);
+    try std.testing.expectEqual(4, nums[3]);
 }
