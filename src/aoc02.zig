@@ -29,38 +29,29 @@ fn checksum(
     while (lines.next()) |line| {
         var nums = utils.parseToNums(allocator, line, '\t');
         defer nums.deinit();
-        sum += Row.init(nums.items).difference();
+        sum += difference(nums.items);
     }
     return sum;
 }
 
-const Row = struct {
-    max: u32,
-    min: u32,
-    /// Calculates the max and min of the row
-    fn init(data: []const u32) Row {
-        var max_val: u32 = 0;
-        var min_val: u32 = std.math.maxInt(u32);
-        for (data) |val| {
-            if (val > max_val) max_val = val;
-            if (val < min_val) min_val = val;
-        }
-        return Row{ .max = max_val, .min = min_val };
+fn difference(data: []const u32) u32 {
+    var max: u32 = 0;
+    var min: u32 = std.math.maxInt(u32);
+    for (data) |val| {
+        if (val > max) max = val;
+        if (val < min) min = val;
     }
-    /// Returns the difference between max and min
-    fn difference(self: Row) u32 {
-        return self.max - self.min;
-    }
-};
+    return max - min;
+}
 
 test "5 1 9 5 difference is 8" {
-    try expectEqual(Row.init(&[_]u32{ 5, 1, 9 }).difference(), 8);
+    try expectEqual(difference(&[_]u32{ 5, 1, 9 }), 8);
 }
 test "7 5 3 difference is 4" {
-    try expectEqual(Row.init(&[_]u32{ 7, 5, 3 }).difference(), 4);
+    try expectEqual(difference(&[_]u32{ 7, 5, 3 }), 4);
 }
 test "2 4 6 8 difference is 6" {
-    try expectEqual(Row.init(&[_]u32{ 2, 4, 6, 8 }).difference(), 6);
+    try expectEqual(difference(&[_]u32{ 2, 4, 6, 8 }), 6);
 }
 test "spreadsheet's checksum is 18" {
     const allocator = std.testing.allocator;
