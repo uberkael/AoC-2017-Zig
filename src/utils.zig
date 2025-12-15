@@ -20,14 +20,14 @@ pub fn linesIterator(data: []const u8) std.mem.TokenIterator(u8, .scalar) {
 pub fn getLinesList(
     allocator: std.mem.Allocator,
     data: []const u8,
-) std.ArrayListUnmanaged([]const u8) {
-    var lines = std.ArrayListUnmanaged([]const u8){};
-    lines.ensureTotalCapacity(allocator, 16) catch |err| {
+) std.array_list.Managed([]const u8) {
+    var lines = std.array_list.Managed([]const u8).init(allocator);
+    lines.ensureTotalCapacity(16) catch |err| {
         std.debug.panic("Error allocating capacity: {}", .{err});
     };
     var iter = linesIterator(data);
     while (iter.next()) |line| {
-        lines.append(allocator, line) catch |err| {
+        lines.append(line) catch |err| {
             std.debug.panic("Error appending line: {}", .{err});
         };
     }
@@ -39,15 +39,15 @@ pub fn getLinesSlice(
     allocator: std.mem.Allocator,
     data: []const u8,
 ) [][]const u8 {
-    var lines = std.ArrayListUnmanaged([]const u8){};
-    defer lines.deinit(allocator);
+    var lines = std.array_list.Managed([]const u8).init(allocator);
+    defer lines.deinit();
     var iter = linesIterator(data);
     while (iter.next()) |line| {
-        lines.append(allocator, line) catch |err| {
+        lines.append(line) catch |err| {
             std.debug.panic("Error appending line: {}", .{err});
         };
     }
-    return lines.toOwnedSlice(allocator) catch |err| {
+    return lines.toOwnedSlice() catch |err| {
         std.debug.panic("Error converting to owned slice: {}", .{err});
     };
 }
