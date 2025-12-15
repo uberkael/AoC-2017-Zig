@@ -54,6 +54,30 @@ pub fn getLinesSlice(
 
 /// Removes trailing newlines from the input
 pub fn cleanInput(input: []const u8) []const u8 {
-    var lines = linesIterator(input);
-    return lines.next() orelse "";
+    if (input.len > 0 and input[input.len - 1] == '\n') {
+        return input[0..input.len - 1];
+    }
+    return input;
+}
+
+/// Parse a slice separated by char into u32 array
+pub fn parseSliceNums(
+    allocator: std.mem.Allocator,
+    line: []const u8,
+    char: u8,
+) []u32 {
+    var list = std.array_list.Managed(u32).init(allocator);
+    defer list.deinit();
+    var parse_iter = std.mem.tokenizeScalar(u8, line, char);
+    while (parse_iter.next()) |num_str| {
+        const num = std.fmt.parseInt(u32, num_str, 10) catch |err| {
+            std.debug.panic("Error parsing number: {}", .{err});
+        };
+        list.append(num) catch |err| {
+            std.debug.panic("Error appending number: {}", .{err});
+        };
+    }
+    return list.toOwnedSlice() catch |err| {
+        std.debug.panic("Error converting to owned slice: {}", .{err});
+    };
 }
