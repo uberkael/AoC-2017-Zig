@@ -2,6 +2,7 @@ const std = @import("std");
 const utils = @import("utils.zig");
 const print = std.debug.print;
 const expectEqual = std.testing.expectEqual;
+const TokenIterator = std.mem.TokenIterator;
 
 pub fn main() void {
     print("\nDay 2: Corruption Checksum\n", .{});
@@ -13,31 +14,29 @@ pub fn main() void {
 
     const data = utils.readFile(allocator, "input/02/input");
     defer allocator.free(data);
-    var lines = utils.listFromLines(allocator, data);
-    defer lines.deinit();
-    var rows = parseRows(allocator, lines.items);
-    defer rows.deinit();
+    var lines = std.mem.tokenizeScalar(u8, data, '\n');
 
     // Part 1
-    print("Part 1: {}\n", .{Row.checksum(rows.items)});
+    print("Part 1: {}\n", .{checksum(allocator, &lines)});
 }
 
-fn parseRows(allocator: std.mem.Allocator, lines: [][]const u8) std.array_list.Managed(Row) {
-    var list = std.array_list.Managed(Row).init(allocator);
-    for (lines) |l| {
-        var nums = utils.parseToNums(allocator, l, '\t');
+/// Calculates the checksum of the spreadsheet (list of rows)
+fn checksum(
+    allocator: std.mem.Allocator,
+    lines: *std.mem.TokenIterator(u8, .scalar),
+) u32 {
+    var sum: u32 = 0;
+    while (lines.next()) |line| {
+        var nums = utils.parseToNums(allocator, line, '\t');
         defer nums.deinit();
-        list.append(Row.init(nums.items)) catch {
-            std.debug.panic("Error appending", .{});
-        };
+        sum += Row.init(nums.items).difference();
     }
-    return list;
+    return sum;
 }
 
 const Row = struct {
     max: u32,
     min: u32,
-
     /// Calculates the max and min of the row
     fn init(data: []const u32) Row {
         var max_val: u32 = 0;
@@ -52,14 +51,6 @@ const Row = struct {
     fn difference(self: Row) u32 {
         return self.max - self.min;
     }
-    /// Calculates the checksum of the spreadsheet (list of rows)
-    fn checksum(rows: []const Row) u32 {
-        var sum: u32 = 0;
-        for (rows) |row| {
-            sum += row.difference();
-        }
-        return sum;
-    }
 };
 
 test "5 1 9 5 difference is 8" {
@@ -72,10 +63,8 @@ test "2 4 6 8 difference is 6" {
     try expectEqual(Row.init(&[_]u32{ 2, 4, 6, 8 }).difference(), 6);
 }
 test "spreadsheet's checksum is 18" {
-    const rows = &[_]Row{
-        Row.init(&[_]u32{ 5, 1, 9, 5 }),
-        Row.init(&[_]u32{ 7, 5, 3 }),
-        Row.init(&[_]u32{ 2, 4, 6, 8 }),
-    };
-    try expectEqual(18, Row.checksum(rows));
+    const allocator = std.testing.allocator;
+    const data = "5\t1\t9\t5\n7\t5\t3\n2\t4\t6\t8";
+    var lines = std.mem.tokenizeScalar(u8, data, '\n');
+    try expectEqual(checksum(allocator, &lines), 18);
 }
