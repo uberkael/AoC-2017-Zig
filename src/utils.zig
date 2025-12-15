@@ -17,7 +17,7 @@ pub fn linesIterator(data: []const u8) std.mem.TokenIterator(u8, .scalar) {
 }
 
 /// Returns an ArrayList containing all the lines as byte slices
-pub fn getLinesList(
+pub fn listFromLines(
     allocator: std.mem.Allocator,
     data: []const u8,
 ) std.array_list.Managed([]const u8) {
@@ -35,7 +35,7 @@ pub fn getLinesList(
 }
 
 /// Returns a slice of slices containing all the lines
-pub fn getLinesSlice(
+pub fn sliceFromLines(
     allocator: std.mem.Allocator,
     data: []const u8,
 ) [][]const u8 {
@@ -61,13 +61,12 @@ pub fn cleanInput(input: []const u8) []const u8 {
 }
 
 /// Parse a slice separated by char into u32 array
-pub fn parseSliceNums(
+pub fn parseToNums(
     allocator: std.mem.Allocator,
     line: []const u8,
     char: u8,
-) []u32 {
+) std.array_list.Managed(u32) {
     var list = std.array_list.Managed(u32).init(allocator);
-    defer list.deinit();
     var parse_iter = std.mem.tokenizeScalar(u8, line, char);
     while (parse_iter.next()) |num_str| {
         const num = std.fmt.parseInt(u32, num_str, 10) catch |err| {
@@ -77,9 +76,7 @@ pub fn parseSliceNums(
             std.debug.panic("Error appending number: {}", .{err});
         };
     }
-    return list.toOwnedSlice() catch |err| {
-        std.debug.panic("Error converting to owned slice: {}", .{err});
-    };
+    return list;
 }
 
 ///////////
@@ -107,13 +104,13 @@ test "linesIterator" {
     try std.testing.expect(iter.next() == null);
 }
 
-test "getLinesList" {
+test "listFromLines" {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
 
     const data = "line1\nline2\nline3";
-    var lines = getLinesList(allocator, data);
+    var lines = listFromLines(allocator, data);
     defer lines.deinit();
 
     try std.testing.expectEqual(3, lines.items.len);
@@ -122,13 +119,13 @@ test "getLinesList" {
     try std.testing.expectEqualStrings("line3", lines.items[2]);
 }
 
-test "getLinesSlice" {
+test "sliceFromLines" {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
 
     const data = "line1\nline2\nline3";
-    const lines = getLinesSlice(allocator, data);
+    const lines = sliceFromLines(allocator, data);
     defer allocator.free(lines);
 
     try std.testing.expectEqual(3, lines.len);
@@ -151,18 +148,18 @@ test "cleanInput" {
     try std.testing.expectEqualStrings("", cleaned3);
 }
 
-test "parseSliceNums" {
+test "parseToNums" {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
 
     const line = "1,2,3,4";
-    const nums = parseSliceNums(allocator, line, ',');
-    defer allocator.free(nums);
+    var nums = parseToNums(allocator, line, ',');
+    defer nums.deinit();
 
-    try std.testing.expectEqual(4, nums.len);
-    try std.testing.expectEqual(1, nums[0]);
-    try std.testing.expectEqual(2, nums[1]);
-    try std.testing.expectEqual(3, nums[2]);
-    try std.testing.expectEqual(4, nums[3]);
+    try std.testing.expectEqual(4, nums.items.len);
+    try std.testing.expectEqual(1, nums.items[0]);
+    try std.testing.expectEqual(2, nums.items[1]);
+    try std.testing.expectEqual(3, nums.items[2]);
+    try std.testing.expectEqual(4, nums.items[3]);
 }
