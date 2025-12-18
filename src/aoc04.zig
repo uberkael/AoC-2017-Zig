@@ -6,7 +6,7 @@ const TokenIterator = std.mem.TokenIterator;
 
 pub fn main() void {
     print("\nDay 4: High-Entropy Passphrases\n", .{});
-    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n", .{});
+    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n", .{});
 
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
@@ -40,9 +40,8 @@ fn checkPassphrases(
 fn validWords(allocator: std.mem.Allocator, line: []const u8) bool {
     var set = std.BufSet.init(allocator);
     defer set.deinit();
-    const words = utils.parseToWords(allocator, line);
-    defer allocator.free(words);
-    for (words) |word| {
+    var words = std.mem.tokenizeScalar(u8, line, ' ');
+    while (words.next()) |word| {
         if (set.contains(word)) {
             return false; // duplicate
         }
@@ -55,20 +54,18 @@ fn validWords(allocator: std.mem.Allocator, line: []const u8) bool {
 
 // Part 2
 fn NoAnagrams(allocator: std.mem.Allocator, line: []const u8) bool {
-    var set = std.BufSet.init(allocator);
-    defer set.deinit();
-    const words = utils.parseToWords(allocator, line);
-    defer allocator.free(words);
-    for (words) |word| {
-        const sorted_buf = allocator.alloc(u8, word.len) catch return false;
-        defer allocator.free(sorted_buf);
-        @memcpy(sorted_buf, word);
-        std.mem.sortUnstable(u8, sorted_buf, {}, std.sort.asc(u8));
-        const sorted_word = sorted_buf;
-        if (set.contains(sorted_word)) {
+    var map = std.AutoHashMap([26]u8, void).init(allocator);
+    defer map.deinit();
+    var words = std.mem.tokenizeScalar(u8, line, ' ');
+    while (words.next()) |word| {
+        var freq = [_]u8{0} ** 26;
+        for (word) |c| {
+            freq[c - 'a'] += 1;
+        }
+        if (map.contains(freq)) {
             return false; // anagram duplicate
         }
-        set.insert(sorted_word) catch {
+        map.put(freq, {}) catch {
             return false; // error
         };
     }
@@ -109,6 +106,34 @@ test "abcde fghij is valid" {
     try expectEqual(true, result);
 }
 // abcde xyz ecdab is not valid - the letters from the third word can be rearranged to form the first word.
+test "abcde xyz ecdab is not valid" {
+    const allocator = std.testing.allocator;
+
+    const line = "abcde xyz ecdab";
+    const result = NoAnagrams(allocator, line);
+    try expectEqual(false, result);
+}
 // a ab abc abd abf abj is a valid passphrase, because all letters need to be used when forming another word.
+test "a ab abc abd abf abj is valid" {
+    const allocator = std.testing.allocator;
+
+    const line = "a ab abc abd abf abj";
+    const result = NoAnagrams(allocator, line);
+    try expectEqual(true, result);
+}
 // iiii oiii ooii oooi oooo is valid.
+test "iiii oiii ooii oooi oooo is valid" {
+    const allocator = std.testing.allocator;
+
+    const line = "iiii oiii ooii oooi oooo";
+    const result = NoAnagrams(allocator, line);
+    try expectEqual(true, result);
+}
 // oiii ioii iioi iiio is not valid - any of these words can be rearranged to form any other word.
+test "oiii ioii iioi iiio is not valid" {
+    const allocator = std.testing.allocator;
+
+    const line = "oiii ioii iioi iiio";
+    const result = NoAnagrams(allocator, line);
+    try expectEqual(false, result);
+}
