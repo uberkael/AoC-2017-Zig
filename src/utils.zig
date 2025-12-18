@@ -83,9 +83,7 @@ pub fn parseToNums(
 // Tests //
 ///////////
 test "readFile" {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
-    const allocator = arena.allocator();
+    const allocator = std.testing.allocator;
 
     const file_path = "input/01/input";
     const read_content = readFile(allocator, file_path);
@@ -105,9 +103,7 @@ test "linesIterator" {
 }
 
 test "listFromLines" {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
-    const allocator = arena.allocator();
+    const allocator = std.testing.allocator;
 
     const data = "line1\nline2\nline3";
     var lines = listFromLines(allocator, data);
@@ -120,9 +116,7 @@ test "listFromLines" {
 }
 
 test "sliceFromLines" {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
-    const allocator = arena.allocator();
+    const allocator = std.testing.allocator;
 
     const data = "line1\nline2\nline3";
     const lines = sliceFromLines(allocator, data);
@@ -149,9 +143,7 @@ test "cleanInput" {
 }
 
 test "parseToNums" {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
-    const allocator = arena.allocator();
+    const allocator = std.testing.allocator;
 
     const line = "1,2,3,4";
     var nums = parseToNums(allocator, line, ',');

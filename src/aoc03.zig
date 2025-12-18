@@ -8,9 +8,9 @@ pub fn main() void {
     print("\nDay 3: Spiral Memory\n", .{});
     print("━━━━━━━━━━━━━━━━━━━━\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
 
     const data = utils.readFile(allocator, "input/03/input");
     defer allocator.free(data);

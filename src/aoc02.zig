@@ -8,9 +8,9 @@ pub fn main() void {
     print("\nDay 2: Corruption Checksum\n", .{});
     print("━━━━━━━━━━━━━━━━━━━━━━━━━━\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
 
     const data = utils.readFile(allocator, "input/02/input");
     defer allocator.free(data);
