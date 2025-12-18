@@ -79,6 +79,24 @@ pub fn parseToNums(
     return list;
 }
 
+/// Parse line into words
+pub fn parseToWords(
+    allocator: std.mem.Allocator,
+    line: []const u8,
+) [][]const u8 {
+    var list = std.array_list.Managed([]const u8).init(allocator);
+    defer list.deinit();
+    var parse_iter = std.mem.tokenizeScalar(u8, line, ' ');
+    while (parse_iter.next()) |word| {
+        list.append(word) catch |err| {
+            std.debug.panic("Error appending word: {}", .{err});
+        };
+    }
+    return list.toOwnedSlice() catch |err| {
+        std.debug.panic("Error converting to owned slice: {}", .{err});
+    };
+}
+
 ///////////
 // Tests //
 ///////////
@@ -154,4 +172,17 @@ test "parseToNums" {
     try std.testing.expectEqual(2, nums.items[1]);
     try std.testing.expectEqual(3, nums.items[2]);
     try std.testing.expectEqual(4, nums.items[3]);
+}
+
+test "parseToWords" {
+    const allocator = std.testing.allocator;
+
+    const line = "hello world zig";
+    const words = parseToWords(allocator, line);
+    defer allocator.free(words);
+
+    try std.testing.expectEqual(3, words.len);
+    try std.testing.expectEqualStrings("hello", words[0]);
+    try std.testing.expectEqualStrings("world", words[1]);
+    try std.testing.expectEqualStrings("zig", words[2]);
 }
