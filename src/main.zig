@@ -6,6 +6,7 @@ const aoc02 = @import("aoc02.zig");
 const aoc03 = @import("aoc03.zig");
 const aoc04 = @import("aoc04.zig");
 const aoc05 = @import("aoc05.zig");
+const aoc06 = @import("aoc06.zig");
 
 pub fn main() !void {
     try aoc01.main();
@@ -13,6 +14,7 @@ pub fn main() !void {
     aoc03.main();
     aoc04.main();
     aoc05.main();
+    aoc06.main();
 
     try AoC_2017_Zig.bufferedPrint();
 }
