@@ -67,7 +67,26 @@ fn jumper(arraylist: std.array_list.Managed(i32)) u32 {
     return steps;
 }
 
-// Part 2
+test "0 3 0 1 -3 reached in 5 steps" {
+    const lines = "0\n3\n0\n1\n-3";
+    const allocator = std.testing.allocator;
+    var arraylist = createArrayList(allocator, lines);
+    defer arraylist.deinit();
+
+    try expectEqual(5, arraylist.items.len);
+
+    try expectEqual(0, arraylist.items[0]);
+    try expectEqual(3, arraylist.items[1]);
+    try expectEqual(0, arraylist.items[2]);
+    try expectEqual(1, arraylist.items[3]);
+    try expectEqual(-3, arraylist.items[4]);
+
+    try expectEqual(5, jumper(arraylist));
+}
+
+////////////
+// Part 2 //
+////////////
 /// Jump until exit the list
 /// If the offset was three or more, decrease it by 1 otherwise increase it by 1
 /// Returns number of steps taken
@@ -87,24 +106,6 @@ fn jumperDecrease(arraylist: std.array_list.Managed(i32)) u32 {
     return steps;
 }
 
-test "0 3 0 1 -3 reached in 5 steps" {
-    const lines = "0\n3\n0\n1\n-3";
-    const allocator = std.testing.allocator;
-    var arraylist = createArrayList(allocator, lines);
-    defer arraylist.deinit();
-
-    try expectEqual(5, arraylist.items.len);
-
-    try expectEqual(0, arraylist.items[0]);
-    try expectEqual(3, arraylist.items[1]);
-    try expectEqual(0, arraylist.items[2]);
-    try expectEqual(1, arraylist.items[3]);
-    try expectEqual(-3, arraylist.items[4]);
-
-    try expectEqual(5, jumper(arraylist));
-}
-
-// Part 2
 test "0 3 0 1 -3 reached in 10 steps" {
     const lines = "0\n3\n0\n1\n-3";
     const allocator = std.testing.allocator;
