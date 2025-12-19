@@ -14,18 +14,18 @@ pub fn main() void {
     const data = utils.readFile(allocator, "input/06/input");
     defer allocator.free(data);
 
-    // Part 1 - Test with example
-    // var memory_test = [_]i32{ 0, 2, 7, 0 };
-    // const steps_test = cycles(4, &memory_test);
-    // print("Part 1: {}\n", .{steps_test});
-
     // Part 1
     var memory: [16]i32 = readMemory(16, data);
     const steps = cycles(16, &memory);
     print("Part 1: {}\n", .{steps});
+
+    // Part 1
+    memory = readMemory(16, data);
+    const loop_size = loops(16, &memory);
+    print("Part 2: {}\n", .{loop_size});
 }
 
-// Read data to a N sized array of i32
+/// Read data to a N sized array of i32
 fn readMemory(
     comptime N: usize,
     data: []const u8,
@@ -38,7 +38,6 @@ fn readMemory(
         const trimmed = std.mem.trim(u8, token, &std.ascii.whitespace);
         memory[i] = std.fmt.parseInt(i32, trimmed, 10) catch 0;
     }
-    print("Initial memory: {any}\n", .{memory});
     return memory;
 }
 
@@ -93,8 +92,43 @@ test "cycle test" {
 
 test "cycles test" {
     var memory = [4]i32{ 0, 2, 7, 0 };
-
     const steps = cycles(4, &memory);
+
     try expectEqual([4]i32{ 2, 4, 1, 2 }, memory);
     try expectEqual(5, steps);
+}
+
+////////////
+// Part 2 //
+////////////
+/// Cycles until a configuration is repeated, returns the loop size
+fn loops(comptime N: usize, memory: *[N]i32) u32 {
+    var seen = std.AutoHashMap([N]i32, u32).init(std.heap.page_allocator);
+    defer seen.deinit();
+    var steps: u32 = 0;
+    // Steps at first occurrence
+    var previous: u32 = 0;
+    while (true) {
+        const key: [N]i32 = memory.*;
+        if (seen.get(key)) |p| {
+            previous = p;
+            break;
+        } else {
+            seen.put(key, steps) catch |err| {
+                std.debug.panic("Error inserting into hashmap: {}", .{err});
+            };
+        }
+        cycle(N, memory);
+        steps += 1;
+    }
+    // Loop size = final steps - fist occurrence steps
+    return steps - previous;
+}
+
+test "loops test" {
+    var memory = [4]i32{ 2, 4, 1, 2 };
+    const loop_size = loops(4, &memory);
+
+    try expectEqual([4]i32{ 2, 4, 1, 2 }, memory);
+    try expectEqual(4, loop_size);
 }
