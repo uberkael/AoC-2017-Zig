@@ -39,6 +39,7 @@ fn checksum(
     return sum;
 }
 
+/// Find max and min of a row and return the difference
 fn difference(data: []const u32) u32 {
     var max: u32 = 0;
     var min: u32 = std.math.maxInt(u32);
@@ -47,19 +48,6 @@ fn difference(data: []const u32) u32 {
         if (val < min) min = val;
     }
     return max - min;
-}
-
-// Part 2
-fn division(data: []const u32) u32 {
-    for (0..data.len) |i| {
-        const a = data[i];
-        for (i + 1..data.len) |j| {
-            const b = data[j];
-            if (a % b == 0) return a / b;
-            if (b % a == 0) return b / a;
-        }
-    }
-    return 0;
 }
 
 test "5 1 9 5 difference is 8" {
@@ -78,7 +66,22 @@ test "spreadsheet's checksum is 18" {
     try expectEqual(checksum(allocator, &lines, difference), 18);
 }
 
-// Part 2
+////////////
+// Part 2 //
+////////////
+/// Find two numbers of a row that evenly divide and return the result
+fn division(data: []const u32) u32 {
+    for (0..data.len) |i| {
+        const a = data[i];
+        for (i + 1..data.len) |j| {
+            const b = data[j];
+            if (a % b == 0) return a / b;
+            if (b % a == 0) return b / a;
+        }
+    }
+    return 0;
+}
+
 // In the first row, the only two numbers that evenly divide are 8 and 2;
 // the result of this division is 4.
 test "5 9 2 8 result 4" {
