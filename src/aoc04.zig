@@ -22,6 +22,7 @@ pub fn main() void {
     print("Part 2: {}\n", .{checkPassphrases(allocator, data, NoAnagrams)});
 }
 
+/// Count valid passphrases in input data
 fn checkPassphrases(
     allocator: std.mem.Allocator,
     data: []const u8,
@@ -37,6 +38,7 @@ fn checkPassphrases(
     return sum;
 }
 
+/// Check if a passphrase has no duplicates
 fn validWords(allocator: std.mem.Allocator, line: []const u8) bool {
     var set = std.BufSet.init(allocator);
     defer set.deinit();
@@ -50,26 +52,6 @@ fn validWords(allocator: std.mem.Allocator, line: []const u8) bool {
         };
     }
     return true; // no duplicates
-}
-
-// Part 2
-fn NoAnagrams(allocator: std.mem.Allocator, line: []const u8) bool {
-    var map = std.AutoHashMap([26]u8, void).init(allocator);
-    defer map.deinit();
-    var words = std.mem.tokenizeScalar(u8, line, ' ');
-    while (words.next()) |word| {
-        var freq = [_]u8{0} ** 26;
-        for (word) |c| {
-            freq[c - 'a'] += 1;
-        }
-        if (map.contains(freq)) {
-            return false; // anagram duplicate
-        }
-        map.put(freq, {}) catch {
-            return false; // error
-        };
-    }
-    return true; // no anagram duplicates
 }
 
 test "aa bb cc dd ee is valid" {
@@ -96,7 +78,29 @@ test "aa bb cc dd aaa is valid" {
     try expectEqual(true, result);
 }
 
-// Part 2
+////////////
+// Part 2 //
+////////////
+/// Check if a passphrase has no anagram duplicates
+fn NoAnagrams(allocator: std.mem.Allocator, line: []const u8) bool {
+    var map = std.AutoHashMap([26]u8, void).init(allocator);
+    defer map.deinit();
+    var words = std.mem.tokenizeScalar(u8, line, ' ');
+    while (words.next()) |word| {
+        var freq = [_]u8{0} ** 26;
+        for (word) |c| {
+            freq[c - 'a'] += 1;
+        }
+        if (map.contains(freq)) {
+            return false; // anagram duplicate
+        }
+        map.put(freq, {}) catch {
+            return false; // error
+        };
+    }
+    return true; // no anagram duplicates
+}
+
 // abcde fghij is a valid passphrase.
 test "abcde fghij is valid" {
     const allocator = std.testing.allocator;
