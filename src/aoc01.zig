@@ -15,15 +15,14 @@ pub fn main() !void {
     const input = utils.cleanInput(data);
 
     // Part 1
-    const sum = captchaSum(input);
-    print("Part 1: {d}\n", .{sum});
+    print("Part 1: {d}\n", .{captchaSum(input)});
 
     // Part 2
-    const sum2 = captchaSumHalfway(input);
-    print("Part 2: {d}\n", .{sum2});
+    print("Part 2: {d}\n", .{captchaSumHalfway(input)});
 }
 
 // Part 1
+/// Sum all digits that match the next digit in the list
 fn captchaSum(input: []const u8) u32 {
     var sum: u32 = 0;
     const last = input.len;
@@ -35,30 +34,6 @@ fn captchaSum(input: []const u8) u32 {
         }
     }
     return sum;
-}
-
-// Part 2
-fn captchaSumHalfway(input: []const u8) u32 {
-    var sum: u32 = 0;
-    const len = input.len;
-    // Check consecutive pairs
-    for (input, 0..) |c, i| {
-        const next_index = (i + len / 2) % len;
-        if (c == input[next_index]) {
-            sum += c - '0';
-        }
-    }
-    return sum;
-}
-
-// Part 2
-// 1122 produces a sum of 3 (1 + 2) because the first digit (1) matches the
-// second digit and the third digit (2) matches the fourth digit
-test "1122 produces 3" {
-    const input = "1122";
-    const expected_sum = 3;
-    const actual_sum = captchaSum(input);
-    try std.testing.expectEqual(expected_sum, actual_sum);
 }
 
 // 1111 produces 4 because each digit (all 1) matches the next.
@@ -79,7 +54,7 @@ test "1234 produces 0" {
 
 // 91212129 produces 9 because the only digit that matches the next one is the
 // last digit, 9.
-test "91212129 produces 9\n" {
+test "91212129 produces 9" {
     const input = "91212129";
     const expected_sum = 9;
     const actual_sum = captchaSum(input);
@@ -122,5 +97,31 @@ test "12131415 produces 4" {
     const input = "12131415";
     const expected_sum = 4;
     const actual_sum = captchaSumHalfway(input);
+    try std.testing.expectEqual(expected_sum, actual_sum);
+}
+
+////////////
+// Part 2 //
+////////////
+/// Sum all digits that match the digit halfway around the circular list
+fn captchaSumHalfway(input: []const u8) u32 {
+    var sum: u32 = 0;
+    const len = input.len;
+    // Check consecutive pairs
+    for (input, 0..) |c, i| {
+        const next_index = (i + len / 2) % len;
+        if (c == input[next_index]) {
+            sum += c - '0';
+        }
+    }
+    return sum;
+}
+
+// 1122 produces a sum of 3 (1 + 2) because the first digit (1) matches the
+// second digit and the third digit (2) matches the fourth digit
+test "1122 produces 3" {
+    const input = "1122";
+    const expected_sum = 3;
+    const actual_sum = captchaSum(input);
     try std.testing.expectEqual(expected_sum, actual_sum);
 }
